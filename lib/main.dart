@@ -1,48 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
+import 'package:camera/camera.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'presentation/pages/vision_page.dart';
 
-import 'providers/vision_provider.dart';
-import 'screens/home_screen.dart';
-
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => VisionProvider(),
-      child: const AppVision(),
-    ),
-  );
+  
+  // Carga las variables de entorno desde el archivo .env
+  await dotenv.load(fileName: ".env");
+  
+  // Obtiene la lista de cámaras disponibles del dispositivo
+  final cameras = await availableCameras();
+  
+  runApp(MyApp(cameras: cameras));
 }
 
-class AppVision extends StatelessWidget {
-  const AppVision({super.key});
+class MyApp extends StatelessWidget {
+  final List<CameraDescription> cameras;
+  
+  const MyApp({super.key, required this.cameras});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'App Vision',
-      debugShowCheckedModeBanner: false,
+      title: 'AI Vision Instance Segmentation',
       theme: ThemeData(
-        useMaterial3: true,
         brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6C63FF),
-          brightness: Brightness.dark,
-          surface: const Color(0xFF0A0A0F),
-        ),
-        scaffoldBackgroundColor: const Color(0xFF0A0A0F),
-        textTheme: GoogleFonts.interTextTheme(
-          ThemeData.dark().textTheme,
-        ),
-        pageTransitionsTheme: const PageTransitionsTheme(
-          builders: {
-            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-          },
-        ),
+        primarySwatch: Colors.green,
       ),
-      home: const HomeScreen(),
+      home: VisionPage(cameras: cameras),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
