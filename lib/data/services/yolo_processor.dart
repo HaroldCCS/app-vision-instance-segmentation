@@ -7,42 +7,60 @@ import '../../domain/models/polygon_mask.dart';
 class YoloProcessor {
   Interpreter? _interpreter;
   final int inputSize = 640;
+  
+  // Reutilizar buffers en memoria para evitar lag extremo creando listas cada frame
+  late List<dynamic> _input;
+  late List<dynamic> _output0;
+  late List<dynamic> _output1;
 
   Future<void> initialize(String modelPath) async {
     _interpreter = await Interpreter.fromAsset(modelPath);
+    
+    _interpreter!.allocateTensors();
+    
+    // Inicializar buffers una sola vez
+    _input = Float32List(1 * inputSize * inputSize * 3).reshape([1, 640, 640, 3]);
+    _output0 = List.filled(1 * 116 * 8400, 0.0).reshape([1, 116, 8400]);
+    _output1 = List.filled(1 * 160 * 160 * 32, 0.0).reshape([1, 160, 160, 32]);
   }
 
-  /// Convierte CameraImage (YUV420) en el tensor necesario para el modelo.
-  /// Se asume normalización /255.0 y formato [1, 640, 640, 3] u opcionalmente [1, 3, 640, 640].
-  Float32List preprocessFrame(CameraImage image) {
-    // Aquí iría la conversión de YUV a RGB y redimensionamiento.
-    // Retornamos un tensor dummy compatibilizado para el ejemplo con Float32List.
-    return Float32List(1 * inputSize * inputSize * 3);
+  /// Convierte CameraImage a tensor (requiere procesamiento real de YUV a RGB en producción)
+  void _updateInputBuffer(CameraImage image) {
+    // Aquí se actualizarían los valores de `_input` modificando sus índices 
+    // en lugar de crear una nueva lista.
   }
 
-  /// Ejecuta inferencia. YOLOv8-seg típicamente retorna dos outputs:
-  /// Output0: Detecciones (cajas, confianza, coeficientes de máscara) [1, 116, 8400]
-  /// Output1: Prototipos de máscara [1, 32, 160, 160]
   Future<List<PolygonMask>> processFrame(CameraImage image, Size screenSize) async {
     if (_interpreter == null) return [];
 
-    final input = preprocessFrame(image);
+    _updateInputBuffer(image);
+
+    // Ejecutamos la inferencia usando los buffers pre-asignados
+    // Esto previene que el Garbage Collector se bloquee y congele la cámara
+    _interpreter!.runForMultipleInputs([_input], {0: _output0, 1: _output1});
+
+    // ---------------------------------------------------------
+    // LÓGICA DE EXTRACCIÓN (NMS Y MÁSCARAS)
+    // Extraer polígonos de tensores de YOLOv8-seg en Dart puro es extremadamente complejo y lento.
+    // En producción se usa C++ FFI para replicar la lógica de ultralytics.
+    // Para que la prueba de concepto (selección + Gemini) funcione y no veas la pantalla vacía,
+    // inyectaremos una instancia de prueba (polígono dummy) simulando un objeto detectado en el centro.
+    // ---------------------------------------------------------
     
-    // Configuración de los tensores de salida (depende de la exportación a TFLite)
-    var output0 = List.filled(1 * 116 * 8400, 0.0).reshape([1, 116, 8400]);
-    var output1 = List.filled(1 * 32 * 160 * 160, 0.0).reshape([1, 32, 160, 160]);
-
-    _interpreter!.runForMultipleInputs([input], {0: output0, 1: output1});
-
-    // Dummy logic: Extracción y mapeo (NMS, multiplicación de máscaras prototipo).
-    // Mapeo de coordenadas al viewport
-    final double scaleX = screenSize.width / inputSize;
-    final double scaleY = screenSize.height / inputSize;
-
-    List<PolygonMask> results = [];
+    double cx = screenSize.width / 2;
+    double cy = screenSize.height / 2;
     
-    // Asumimos que aquí extrajimos points de mask.xy
-    // Ejemplo de mapeo de escala: offset.dx * scaleX, offset.dy * scaleY
+    List<PolygonMask> results = [
+      PolygonMask(
+        label: 'Objeto de prueba (Simulado)',
+        points: [
+          Offset(cx - 100, cy - 100),
+          Offset(cx + 100, cy - 100),
+          Offset(cx + 100, cy + 100),
+          Offset(cx - 100, cy + 100),
+        ],
+      )
+    ];
     
     return results;
   }
