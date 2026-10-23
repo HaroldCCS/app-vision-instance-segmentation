@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'presentation/pages/vision_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Carga las variables de entorno desde el archivo .env
-  await dotenv.load(fileName: ".env");
   
   // Obtiene la lista de cámaras disponibles del dispositivo
   final cameras = await availableCameras();

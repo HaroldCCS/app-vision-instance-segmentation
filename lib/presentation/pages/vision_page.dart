@@ -2,7 +2,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:image/image.dart' as img;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../../domain/models/polygon_mask.dart';
 import '../../data/services/yolo_processor.dart';
@@ -37,8 +36,8 @@ class _VisionPageState extends State<VisionPage> {
   @override
   void initState() {
     super.initState();
-    // Carga la API Key desde el archivo .env configurado
-    _geminiClient = GeminiClient(dotenv.env['GEMINI_API_KEY'] ?? '');
+    // La API Key se pasa solo en desarrollo: flutter run --dart-define=GEMINI_API_KEY=...
+    _geminiClient = GeminiClient(const String.fromEnvironment('GEMINI_API_KEY'));
     _initializeModel();
     _initializeCamera();
   }

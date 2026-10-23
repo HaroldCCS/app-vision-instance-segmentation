@@ -7,7 +7,6 @@ App en **Flutter** que segmenta objetos en tiempo real **dentro del celular** co
 ![TensorFlow Lite](https://img.shields.io/badge/TensorFlow_Lite-FF6F00?style=flat-square&logo=tensorflow&logoColor=white)
 ![YOLOv8](https://img.shields.io/badge/YOLOv8--seg-111F68?style=flat-square&logo=ultralytics&logoColor=white)
 ![Gemini](https://img.shields.io/badge/Gemini-8E75B2?style=flat-square&logo=googlegemini&logoColor=white)
-![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white)
 
 ## ✨ Flujo
 
@@ -44,14 +43,11 @@ assets/
 ## 🚀 Ejecutar
 
 ```bash
-echo "GEMINI_API_KEY=tu_api_key" > .env
 flutter pub get
-flutter run
+flutter run --dart-define=GEMINI_API_KEY=tu_api_key
 ```
 
-## 📦 Releases automáticos
-
-Al publicar un tag, GitHub Actions compila el **APK de Android** y el **ejecutable de Windows** y los adjunta a un GitHub Release.
+> 🔒 **Sobre la API key:** la llave se pasa solo al ejecutar en desarrollo y nunca se guarda en el repositorio. Este proyecto no publica builds: cualquier llave incluida en una app instalada puede extraerse del binario. Para distribuirla, la llamada a Gemini debe pasar por un backend propio que guarde la llave.
 
 ---
 
